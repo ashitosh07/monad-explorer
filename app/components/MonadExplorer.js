@@ -440,44 +440,6 @@ export default function MonadExplorer() {
         </>
       )}
 
-      {activeTab === 'tokens' && (
-        <div className="bg-gray-800 p-6 rounded-lg">
-          <h3 className="text-lg font-semibold mb-4 text-purple-400">Top Tokens</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tokens.map((token, index) => (
-              <div key={index} className="bg-gray-700 p-4 rounded-lg">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h4 className="font-bold text-lg">{token.name}</h4>
-                    <p className="text-gray-400 text-sm">{token.symbol}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">${token.price}</p>
-                    <p className={`text-sm ${
-                      Number(token.change24h) >= 0 ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {formatPercent(token.change24h)}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Volume 24h:</span>
-                    <span>${formatNumber(token.volume24h)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Holders:</span>
-                    <span>{formatNumber(token.holders)}</span>
-                  </div>
-                  <div className="text-xs text-gray-500 font-mono">
-                    {formatAddress(token.address)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {activeTab === 'address' && addressDetails && (
         <>
