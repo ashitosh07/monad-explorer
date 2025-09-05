@@ -13,11 +13,20 @@ export async function GET(request, { params }) {
     const { address } = params;
     const provider = getProvider();
     
-    const [balance, txCount, code] = await Promise.all([
+    const [balance, txCount, code, tokensRes, activityRes] = await Promise.all([
       provider.getBalance(address),
       provider.getTransactionCount(address),
-      provider.getCode(address)
+      provider.getCode(address),
+      fetch(`https://api.blockvision.org/v1/account/${address}/tokens`, {
+        headers: { 'X-API-KEY': process.env.BLOCKVISION_API_KEY || '32I7NHH5XeN6h9WMCgclY0KDgJY', 'Content-Type': 'application/json' }
+      }).catch(() => null),
+      fetch(`https://api.blockvision.org/v1/account/${address}/txns`, {
+        headers: { 'X-API-KEY': process.env.BLOCKVISION_API_KEY || '32I7NHH5XeN6h9WMCgclY0KDgJY', 'Content-Type': 'application/json' }
+      }).catch(() => null)
     ]);
+    
+    const tokens = tokensRes?.ok ? (await tokensRes.json()).data || [] : [];
+    const transactions = activityRes?.ok ? (await activityRes.json()).data || [] : [];
     
     // Generate mock activity data since we can't easily fetch transaction history
     const activityData = {
@@ -57,14 +66,19 @@ export async function GET(request, { params }) {
     return NextResponse.json({
       address,
       balance: ethers.formatEther(balance),
-      balanceUSD: (parseFloat(ethers.formatEther(balance)) * 75.50).toFixed(2),
+      balanceUSD: (parseFloat(ethers.formatEther(balance)) * 0.001).toFixed(6), // Testnet price
       transactionCount: txCount,
       isContract: code !== '0x',
-      contractType: code !== '0x' ? ['ERC20 Token', 'ERC721 NFT', 'Multisig Wallet', 'DEX Router'][Math.floor(Math.random() * 4)] : null,
-      activityData,
-      tokenBalances,
-      riskScore,
-      labels: Math.random() > 0.8 ? ['Exchange', 'DeFi Protocol', 'Whale'].filter(() => Math.random() > 0.7) : []
+      contractType: code !== '0x' ? 'Smart Contract' : 'EOA',
+      tokens: tokens.slice(0, 10), // Top 10 tokens
+      recentTransactions: transactions.slice(0, 20), // Recent 20 transactions
+      totalTokens: tokens.length,
+      riskScore: {
+        score: Math.min(txCount * 2, 100),
+        level: txCount > 100 ? 'High' : txCount > 10 ? 'Medium' : 'Low',
+        factors: ['Transaction frequency based assessment']
+      },
+      labels: txCount > 1000 ? ['High Activity'] : txCount > 100 ? ['Active'] : ['New']
     });
   } catch (error) {
     return NextResponse.json({ error: 'Invalid address or fetch failed' }, { status: 400 });

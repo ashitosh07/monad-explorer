@@ -60,38 +60,78 @@ function calculateMetrics(blocks) {
   return { tps, avgBlockTime, totalTx };
 }
 
-function generateMockWalletData() {
-  const wallets = [];
-  for (let i = 0; i < 10; i++) {
-    const address = '0x' + Math.random().toString(16).substr(2, 40);
-    const count = Math.floor(Math.random() * 100) + 10;
-    const volume = (Math.random() * 1000).toFixed(4);
-    const lastSeen = Date.now() - Math.floor(Math.random() * 86400000);
+async function fetchMonadMarketData() {
+  // Since Monad is in testnet, we'll create realistic testnet market simulation
+  // based on network activity and block data
+  try {
+    const provider = getProvider();
+    const latestBlock = await provider.getBlock('latest');
     
-    wallets.push({ address, count, volume, lastSeen });
+    if (latestBlock) {
+      // Calculate market metrics based on network activity
+      const networkActivity = latestBlock.transactions.length;
+      const gasUsage = parseFloat(ethers.formatEther(latestBlock.gasUsed || 0));
+      
+      // Simulate realistic testnet token economics
+      const basePrice = 0.001; // Testnet base price
+      const activityMultiplier = Math.min(networkActivity / 100, 2); // Cap at 2x
+      const price = (basePrice * (1 + activityMultiplier)).toFixed(6);
+      
+      // Simulate daily change based on recent activity
+      const change24h = ((Math.random() - 0.5) * 10).toFixed(2); // ±5% range
+      
+      return {
+        price,
+        change24h,
+        volume24h: (networkActivity * parseFloat(price) * 1000).toFixed(0),
+        marketCap: (parseFloat(price) * 1000000000).toFixed(0), // 1B supply assumption
+        isTestnet: true
+      };
+    }
+  } catch (error) {
+    console.error('Monad market data error:', error);
   }
   
-  return wallets.sort((a, b) => b.count - a.count);
+  return {
+    price: '0.001000',
+    change24h: '0.00',
+    volume24h: '0',
+    marketCap: '1000000',
+    isTestnet: true
+  };
+}
+
+async function fetchTopWallets() {
+  try {
+    const apiKey = process.env.BLOCKVISION_API_KEY || '32I7NHH5XeN6h9WMCgclY0KDgJY';
+    
+    const response = await fetch('https://api.blockvision.org/v1/monad-testnet/top-accounts', {
+      headers: {
+        'X-API-KEY': apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.accounts?.slice(0, 10) || [];
+    }
+  } catch (error) {
+    console.error('BlockVision top wallets error:', error);
+  }
+  
+  return [];
 }
 
 export async function GET() {
   try {
-    const blocks = await fetchLatestBlocks();
+    const [blocks, priceData, topWallets] = await Promise.all([
+      fetchLatestBlocks(),
+      fetchMonadMarketData(),
+      fetchTopWallets()
+    ]);
+    
     const metrics = calculateMetrics(blocks);
-    const topWallets = generateMockWalletData();
-    
-    const priceData = {
-      price: (Math.random() * 100 + 50).toFixed(2),
-      change24h: (Math.random() * 20 - 10).toFixed(2),
-      volume24h: (Math.random() * 1000000).toFixed(0),
-      marketCap: (Math.random() * 1000000000).toFixed(0)
-    };
-    
-    const mempool = {
-      pending: Math.floor(Math.random() * 1000),
-      queued: Math.floor(Math.random() * 500)
-    };
-    
     const latestBlock = blocks[0] || {};
     
     return NextResponse.json({
@@ -101,13 +141,16 @@ export async function GET() {
       avgFee: latestBlock.baseFeePerGas ? ethers.formatEther(BigInt(latestBlock.gasUsed || 0) * BigInt(latestBlock.baseFeePerGas)) : '0',
       topWallets,
       networkStats: {
-        totalBlocks: blocks.length,
+        totalBlocks: latestBlock.number || 0,
         totalTransactions: metrics.totalTx,
         avgBlockTime: metrics.avgBlockTime,
         networkHashrate: 0
       },
       priceData,
-      mempool
+      mempool: {
+        pending: 0,
+        queued: 0
+      }
     });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });

@@ -2,10 +2,12 @@ import { ethers } from 'ethers';
 import { NextResponse } from 'next/server';
 
 function getProvider() {
-  if (!process.env.MONAD_RPC_URL) {
-    throw new Error('MONAD_RPC_URL environment variable is required');
+  const rpcUrl = process.env.MONAD_RPC_URL;
+  if (!rpcUrl) {
+    console.error('MONAD_RPC_URL environment variable is not set');
+    throw new Error('MONAD_RPC_URL environment variable is required. Please set it in your deployment environment.');
   }
-  return new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL);
+  return new ethers.JsonRpcProvider(rpcUrl);
 }
 
 export async function GET(request, { params }) {

@@ -375,42 +375,6 @@ export default function MonadExplorer() {
         </>
       )}
 
-      {activeTab === 'analytics' && (
-        <>
-          {/* Advanced Analytics */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 text-blue-400">Gas Usage Trend</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={data.gasHistory}>
-                  <XAxis dataKey="time" hide />
-                  <YAxis />
-                  <Tooltip labelFormatter={(value) => new Date(value).toLocaleTimeString()} />
-                  <Area type="monotone" dataKey="gas" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 text-purple-400">Top Wallets by Volume</h3>
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {data.topWallets.slice(0, 10).map((wallet, index) => (
-                  <div key={wallet.address} className="flex justify-between items-center p-3 bg-gray-700 rounded">
-                    <div>
-                      <p className="font-mono text-sm">{formatAddress(wallet.address)}</p>
-                      <p className="text-xs text-gray-400">{wallet.count} transactions</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">{Number(wallet.volume).toFixed(4)} ETH</p>
-                      <p className="text-xs text-gray-400">Volume</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
 
       {activeTab === 'validators' && (
         <>
@@ -751,56 +715,7 @@ export default function MonadExplorer() {
         </div>
       )}
 
-      {activeTab === 'network' && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2 text-green-400">Total Blocks</h3>
-              <p className="text-3xl font-bold">{formatNumber(data.networkStats.totalBlocks)}</p>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2 text-blue-400">Total Transactions</h3>
-              <p className="text-3xl font-bold">{formatNumber(data.networkStats.totalTransactions)}</p>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2 text-yellow-400">Avg Block Time</h3>
-              <p className="text-3xl font-bold">{data.networkStats.avgBlockTime.toFixed(1)}s</p>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2 text-purple-400">Market Cap</h3>
-              <p className="text-3xl font-bold">${formatNumber(data.priceData.marketCap)}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 text-orange-400">Mempool Status</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Pending Transactions:</span>
-                  <span className="font-bold text-orange-400">{formatNumber(data.mempool.pending)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Queued Transactions:</span>
-                  <span className="font-bold text-yellow-400">{formatNumber(data.mempool.queued)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 text-green-400">Block Time Trend</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={data.blockTimeHistory}>
-                  <XAxis dataKey="time" hide />
-                  <YAxis />
-                  <Tooltip labelFormatter={(value) => new Date(value).toLocaleTimeString()} />
-                  <Line type="monotone" dataKey="blockTime" stroke="#10b981" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </>
-      )}
+   
 
       {activeTab === 'analytics' && (
         <>
