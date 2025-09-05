@@ -1,10 +1,16 @@
 import { ethers } from 'ethers';
 import { NextResponse } from 'next/server';
 
-const provider = new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL);
+function getProvider() {
+  if (!process.env.MONAD_RPC_URL) {
+    throw new Error('MONAD_RPC_URL environment variable is required');
+  }
+  return new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL);
+}
 
 export async function GET() {
   try {
+    const provider = getProvider();
     const latestBlockNumber = await provider.getBlockNumber();
     const blocks = [];
     
