@@ -1,26 +1,38 @@
-export async function GET(request, { params }) {
-  const { number } = params;
-  
-  const blockData = {
-    number: parseInt(number),
-    hash: `0x${Math.random().toString(16).substr(2, 64)}`,
-    parentHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-    timestamp: Date.now() - Math.random() * 86400000,
-    miner: `0x${Math.random().toString(16).substr(2, 40)}`,
-    gasUsed: Math.floor(Math.random() * 30000000) + 10000000,
-    gasLimit: 30000000,
-    baseFeePerGas: Math.floor(Math.random() * 50) + 20,
-    size: Math.floor(Math.random() * 50000) + 20000,
-    transactionCount: Math.floor(Math.random() * 200) + 50,
-    transactions: Array.from({ length: 10 }, () => ({
-      hash: `0x${Math.random().toString(16).substr(2, 64)}`,
-      from: `0x${Math.random().toString(16).substr(2, 40)}`,
-      to: `0x${Math.random().toString(16).substr(2, 40)}`,
-      value: (Math.random() * 10).toFixed(4),
-      gasPrice: Math.floor(Math.random() * 100) + 20,
-      status: Math.random() > 0.1 ? 'success' : 'failed'
-    }))
-  };
+import { ethers } from 'ethers';
+import { NextResponse } from 'next/server';
 
-  return Response.json(blockData);
+const provider = new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL);
+
+export async function GET(request, { params }) {
+  try {
+    const blockNumber = parseInt(params.number);
+    const block = await provider.getBlock(blockNumber, true);
+    
+    if (!block) {
+      return NextResponse.json({ error: 'Block not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({
+      number: block.number,
+      hash: block.hash,
+      parentHash: block.parentHash,
+      timestamp: block.timestamp,
+      nonce: block.nonce,
+      difficulty: block.difficulty?.toString() || '0',
+      gasLimit: block.gasLimit.toString(),
+      gasUsed: block.gasUsed.toString(),
+      miner: block.miner || 'Unknown',
+      extraData: block.extraData,
+      transactions: block.transactions.map(tx => ({
+        hash: typeof tx === 'string' ? tx : tx.hash,
+        from: typeof tx === 'object' ? tx.from : null,
+        to: typeof tx === 'object' ? tx.to : null,
+        value: typeof tx === 'object' ? ethers.formatEther(tx.value || 0) : null
+      })),
+      transactionCount: block.transactions.length,
+      size: block.transactions.length * 100 // Approximate
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'Block not found' }, { status: 404 });
+  }
 }

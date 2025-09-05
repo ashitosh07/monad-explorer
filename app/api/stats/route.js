@@ -1,7 +1,10 @@
 import { ethers } from 'ethers';
 import { NextResponse } from 'next/server';
 
-const provider = new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL || 'https://monad-testnet.g.alchemy.com/v2/ZU7w78sprwo0q1b1eNaj2');
+if (!process.env.MONAD_RPC_URL) {
+  throw new Error('MONAD_RPC_URL environment variable is required');
+}
+const provider = new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL);
 
 async function fetchLatestBlocks() {
   try {

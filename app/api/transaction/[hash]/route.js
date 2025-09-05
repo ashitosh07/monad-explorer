@@ -1,23 +1,45 @@
-export async function GET(request, { params }) {
-  const { hash } = params;
-  
-  const transactionData = {
-    hash,
-    blockNumber: Math.floor(Math.random() * 1000000) + 500000,
-    blockHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-    transactionIndex: Math.floor(Math.random() * 200),
-    from: `0x${Math.random().toString(16).substr(2, 40)}`,
-    to: `0x${Math.random().toString(16).substr(2, 40)}`,
-    value: (Math.random() * 10).toFixed(4),
-    gasPrice: Math.floor(Math.random() * 100) + 20,
-    gasLimit: 21000,
-    gasUsed: Math.floor(Math.random() * 21000) + 15000,
-    nonce: Math.floor(Math.random() * 1000),
-    timestamp: Date.now() - Math.random() * 86400000,
-    status: Math.random() > 0.1 ? 'success' : 'failed',
-    confirmations: Math.floor(Math.random() * 100) + 10,
-    logs: []
-  };
+import { ethers } from 'ethers';
+import { NextResponse } from 'next/server';
 
-  return Response.json(transactionData);
+const provider = new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL);
+
+export async function GET(request, { params }) {
+  try {
+    const { hash } = params;
+    
+    const [tx, receipt] = await Promise.all([
+      provider.getTransaction(hash),
+      provider.getTransactionReceipt(hash)
+    ]);
+    
+    if (!tx) {
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({
+      transaction: {
+        hash: tx.hash,
+        blockNumber: tx.blockNumber,
+        blockHash: tx.blockHash,
+        transactionIndex: tx.index,
+        from: tx.from,
+        to: tx.to,
+        value: ethers.formatEther(tx.value || 0),
+        gasLimit: tx.gasLimit.toString(),
+        gasPrice: tx.gasPrice ? ethers.formatUnits(tx.gasPrice, 'gwei') : '0',
+        data: tx.data,
+        nonce: tx.nonce,
+        type: tx.type
+      },
+      receipt: receipt ? {
+        status: receipt.status === 1 ? 'success' : 'failed',
+        gasUsed: receipt.gasUsed.toString(),
+        effectiveGasPrice: receipt.effectiveGasPrice ? ethers.formatUnits(receipt.effectiveGasPrice, 'gwei') : '0',
+        logs: receipt.logs.length,
+        contractAddress: receipt.contractAddress
+      } : null
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+  }
 }

@@ -106,16 +106,20 @@ export default function MonadExplorer() {
     if (!searchQuery.trim()) return;
     
     try {
-      const response = await fetch(`/api/search/${searchQuery}`);
+      const response = await fetch(`/api/search/${encodeURIComponent(searchQuery)}`);
       const result = await response.json();
       setSearchResult(result);
       
       // If it's an address, fetch detailed information
       if (result.type === 'address') {
-        const addressResponse = await fetch(`/api/address/${searchQuery}`);
-        const addressData = await addressResponse.json();
-        setAddressDetails(addressData);
-        setActiveTab('address');
+        try {
+          const addressResponse = await fetch(`/api/address/${searchQuery}`);
+          const addressData = await addressResponse.json();
+          setAddressDetails(addressData);
+          setActiveTab('address');
+        } catch (error) {
+          console.error('Address details fetch failed:', error);
+        }
       }
     } catch (error) {
       console.error('Search error:', error);
@@ -193,11 +197,16 @@ export default function MonadExplorer() {
           </button>
           <div className="flex space-x-2">
             <TabButton id="overview" label="Overview" active={activeTab === 'overview'} onClick={setActiveTab} />
+            <TabButton id="network" label="Network" active={activeTab === 'network'} onClick={setActiveTab} />
+            <TabButton id="analytics" label="Analytics" active={activeTab === 'analytics'} onClick={setActiveTab} />
             <TabButton id="defi" label="DeFi" active={activeTab === 'defi'} onClick={setActiveTab} />
             <TabButton id="nfts" label="NFTs" active={activeTab === 'nfts'} onClick={setActiveTab} />
-            <TabButton id="gas" label="Gas" active={activeTab === 'gas'} onClick={setActiveTab} />
             <TabButton id="mev" label="MEV" active={activeTab === 'mev'} onClick={setActiveTab} />
             <TabButton id="validators" label="Validators" active={activeTab === 'validators'} onClick={setActiveTab} />
+            <TabButton id="richlist" label="Rich List" active={activeTab === 'richlist'} onClick={setActiveTab} />
+            <TabButton id="bridges" label="Bridges" active={activeTab === 'bridges'} onClick={setActiveTab} />
+            <TabButton id="whales" label="Whales" active={activeTab === 'whales'} onClick={setActiveTab} />
+            <TabButton id="tokens" label="Tokens" active={activeTab === 'tokens'} onClick={setActiveTab} />
           </div>
         </div>
       </div>
@@ -734,6 +743,228 @@ export default function MonadExplorer() {
                     <span className={Number(collection.change24h) >= 0 ? 'text-green-400' : 'text-red-400'}>
                       {formatPercent(collection.change24h)}
                     </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'network' && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-2 text-green-400">Total Blocks</h3>
+              <p className="text-3xl font-bold">{formatNumber(data.networkStats.totalBlocks)}</p>
+            </div>
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-2 text-blue-400">Total Transactions</h3>
+              <p className="text-3xl font-bold">{formatNumber(data.networkStats.totalTransactions)}</p>
+            </div>
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-2 text-yellow-400">Avg Block Time</h3>
+              <p className="text-3xl font-bold">{data.networkStats.avgBlockTime.toFixed(1)}s</p>
+            </div>
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-2 text-purple-400">Market Cap</h3>
+              <p className="text-3xl font-bold">${formatNumber(data.priceData.marketCap)}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4 text-orange-400">Mempool Status</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span>Pending Transactions:</span>
+                  <span className="font-bold text-orange-400">{formatNumber(data.mempool.pending)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Queued Transactions:</span>
+                  <span className="font-bold text-yellow-400">{formatNumber(data.mempool.queued)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4 text-green-400">Block Time Trend</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={data.blockTimeHistory}>
+                  <XAxis dataKey="time" hide />
+                  <YAxis />
+                  <Tooltip labelFormatter={(value) => new Date(value).toLocaleTimeString()} />
+                  <Line type="monotone" dataKey="blockTime" stroke="#10b981" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'analytics' && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4 text-blue-400">Gas Usage Trend</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={data.gasHistory}>
+                  <XAxis dataKey="time" hide />
+                  <YAxis />
+                  <Tooltip labelFormatter={(value) => new Date(value).toLocaleTimeString()} />
+                  <Area type="monotone" dataKey="gas" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4 text-purple-400">Top Wallets by Volume</h3>
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {data.topWallets.slice(0, 10).map((wallet, index) => (
+                  <div key={wallet.address} className="flex justify-between items-center p-3 bg-gray-700 rounded">
+                    <div>
+                      <p className="font-mono text-sm">{formatAddress(wallet.address)}</p>
+                      <p className="text-xs text-gray-400">{wallet.count} transactions</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">{Number(wallet.volume).toFixed(4)} ETH</p>
+                      <p className="text-xs text-gray-400">Volume</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'richlist' && (
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <h3 className="text-lg font-semibold mb-4 text-yellow-400">Rich List</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left p-2">Rank</th>
+                  <th className="text-left p-2">Address</th>
+                  <th className="text-left p-2">Balance (MONAD)</th>
+                  <th className="text-left p-2">Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {richList.slice(0, 20).map((account) => (
+                  <tr key={account.rank} className="border-b border-gray-700 hover:bg-gray-700">
+                    <td className="p-2 font-bold">{account.rank}</td>
+                    <td className="p-2 font-mono text-blue-400">{formatAddress(account.address)}</td>
+                    <td className="p-2">{formatNumber(account.balance)}</td>
+                    <td className="p-2">{account.percentage}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'bridges' && (
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <h3 className="text-lg font-semibold mb-4 text-cyan-400">Cross-Chain Bridges</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bridgeData.map((bridge, index) => (
+              <div key={index} className="bg-gray-700 p-4 rounded-lg">
+                <div className="flex justify-between items-start mb-3">
+                  <h4 className="font-bold text-lg">{bridge.name}</h4>
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    bridge.status === 'active' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                  }`}>
+                    {bridge.status}
+                  </span>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>24h Volume:</span>
+                    <span>${formatNumber(bridge.volume24h)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>24h Transactions:</span>
+                    <span>{formatNumber(bridge.transactions24h)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Avg Time:</span>
+                    <span>{Math.floor(bridge.avgTime / 60)}m {bridge.avgTime % 60}s</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Fee:</span>
+                    <span>${bridge.fee}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'whales' && (
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <h3 className="text-lg font-semibold mb-4 text-red-400">Whale Alerts</h3>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {whaleAlerts.slice(0, 20).map((alert, index) => (
+              <div key={index} className="bg-gray-700 p-4 rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">{alert.type}</span>
+                      <span className="text-xs text-gray-400">{new Date(alert.timestamp).toLocaleString()}</span>
+                    </div>
+                    <p className="font-mono text-xs text-gray-300 mb-1">
+                      From: {formatAddress(alert.from)}
+                    </p>
+                    <p className="font-mono text-xs text-gray-300">
+                      To: {formatAddress(alert.to)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-lg">{formatNumber(alert.amount)} {alert.token}</p>
+                    <p className="text-sm text-green-400">${formatNumber(alert.amountUSD)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'tokens' && (
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <h3 className="text-lg font-semibold mb-4 text-purple-400">Top Tokens</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tokens.map((token, index) => (
+              <div key={index} className="bg-gray-700 p-4 rounded-lg">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h4 className="font-bold text-lg">{token.name}</h4>
+                    <p className="text-gray-400 text-sm">{token.symbol}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">${token.price}</p>
+                    <p className={`text-sm ${
+                      Number(token.change24h) >= 0 ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {formatPercent(token.change24h)}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Volume 24h:</span>
+                    <span>${formatNumber(token.volume24h)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Holders:</span>
+                    <span>{formatNumber(token.holders)}</span>
+                  </div>
+                  <div className="text-xs text-gray-500 font-mono">
+                    {formatAddress(token.address)}
                   </div>
                 </div>
               </div>
