@@ -66,37 +66,23 @@ git clone <repository-url>
 cd monad-explorer
 ```
 
-2. **Install Backend Dependencies**
+2. **Install Dependencies**
 ```bash
-cd backend
 npm install
 ```
 
-3. **Install Frontend Dependencies**
+3. **Configure Environment Variables**
+Copy `.env.example` to `.env.local` and add your Alchemy API key:
 ```bash
-cd ../frontend
-npm install
+cp .env.example .env.local
 ```
 
-4. **Configure API Endpoint**
-Update the Monad RPC URL in `backend/server.js`:
-```javascript
-const provider = new ethers.JsonRpcProvider('https://monad-testnet.g.alchemy.com/v2/YOUR_API_KEY');
-```
-
-5. **Start the Backend**
+4. **Start Development Server**
 ```bash
-cd backend
 npm run dev
 ```
 
-6. **Start the Frontend**
-```bash
-cd frontend
-npm run dev
-```
-
-7. **Access the Explorer**
+5. **Access the Explorer**
 Open `http://localhost:3000` in your browser
 
 ## 📡 API Endpoints
@@ -143,42 +129,35 @@ Search any address to view:
 ### Project Structure
 ```
 monad-explorer/
-├── backend/
-│   ├── server.js          # Main API server
-│   ├── package.json       # Backend dependencies
-│   └── node_modules/
-├── frontend/
-│   ├── app/
-│   │   ├── components/
-│   │   │   └── MonadExplorer.js  # Main component
-│   │   ├── globals.css    # Global styles
-│   │   ├── layout.js      # App layout
-│   │   └── page.js        # Home page
-│   ├── package.json       # Frontend dependencies
-│   └── node_modules/
+├── app/
+│   ├── api/               # Next.js API routes
+│   ├── components/
+│   │   └── MonadExplorer.js  # Main component
+│   ├── globals.css        # Global styles
+│   ├── layout.js          # App layout
+│   └── page.js            # Home page
+├── package.json           # Dependencies
+├── next.config.js         # Next.js config
+├── tailwind.config.js     # Tailwind config
+├── vercel.json            # Vercel config
 ├── .gitignore
 └── README.md
 ```
 
 ### Key Technologies
-- **Backend**: Node.js, Express, Ethers.js, CORS
-- **Frontend**: Next.js, React, Tailwind CSS, Recharts
-- **Blockchain**: Monad Testnet via Alchemy
+- **Framework**: Next.js 14 with App Router
+- **Frontend**: React 18, Tailwind CSS, Recharts
+- **API**: Next.js API Routes
+- **Blockchain**: Ethers.js, Monad Testnet via Alchemy
+- **Deployment**: Vercel
 
 ## 🔧 Configuration
 
 ### Environment Variables
-Create `.env` files for sensitive configuration:
+Create `.env.local` file:
 
-**Backend (.env)**
 ```env
-PORT=3001
 MONAD_RPC_URL=https://monad-testnet.g.alchemy.com/v2/YOUR_API_KEY
-```
-
-**Frontend (.env.local)**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
 ## 📈 Performance Optimizations
@@ -209,6 +188,34 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Next.js & React** for the frontend framework
 - **Tailwind CSS** for styling
 - **Recharts** for data visualization
+
+## 🚀 Vercel Deployment
+
+### Quick Deploy
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/monad-explorer)
+
+### Manual Deployment
+
+1. **Fork this repository**
+
+2. **Connect to Vercel**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "New Project"
+   - Import your forked repository
+
+3. **Configure Environment Variables**
+   - Add `MONAD_RPC_URL` with your Alchemy API key
+   - Example: `https://monad-testnet.g.alchemy.com/v2/YOUR_API_KEY`
+
+4. **Deploy**
+   - Vercel will automatically build and deploy
+   - Your app will be available at `https://your-project.vercel.app`
+
+### Environment Variables
+Set these in your Vercel project settings:
+```
+MONAD_RPC_URL=https://monad-testnet.g.alchemy.com/v2/YOUR_API_KEY
+```
 
 ## 📞 Support
 

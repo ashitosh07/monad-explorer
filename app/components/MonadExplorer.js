@@ -51,16 +51,16 @@ export default function MonadExplorer() {
     setLoading(true);
     try {
       const [statsRes, validatorsRes, richListRes, tokensRes, defiRes, nftRes, gasRes, mevRes, bridgeRes, whaleRes] = await Promise.all([
-        fetch('http://localhost:3001/api/stats'),
-        fetch('http://localhost:3001/api/validators'),
-        fetch('http://localhost:3001/api/richlist'),
-        fetch('http://localhost:3001/api/tokens'),
-        fetch('http://localhost:3001/api/defi'),
-        fetch('http://localhost:3001/api/nfts'),
-        fetch('http://localhost:3001/api/gas'),
-        fetch('http://localhost:3001/api/mev'),
-        fetch('http://localhost:3001/api/bridges'),
-        fetch('http://localhost:3001/api/whales')
+        fetch('/api/stats'),
+        fetch('/api/validators'),
+        fetch('/api/richlist'),
+        fetch('/api/tokens'),
+        fetch('/api/defi'),
+        fetch('/api/nfts'),
+        fetch('/api/gas'),
+        fetch('/api/mev'),
+        fetch('/api/bridges'),
+        fetch('/api/whales')
       ]);
       
       const [apiData, validatorsData, richListData, tokensData, defiDataRes, nftDataRes, gasDataRes, mevDataRes, bridgeDataRes, whaleDataRes] = await Promise.all([
@@ -106,13 +106,13 @@ export default function MonadExplorer() {
     if (!searchQuery.trim()) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/search/${searchQuery}`);
+      const response = await fetch(`/api/search/${searchQuery}`);
       const result = await response.json();
       setSearchResult(result);
       
       // If it's an address, fetch detailed information
       if (result.type === 'address') {
-        const addressResponse = await fetch(`http://localhost:3001/api/address/${searchQuery}`);
+        const addressResponse = await fetch(`/api/address/${searchQuery}`);
         const addressData = await addressResponse.json();
         setAddressDetails(addressData);
         setActiveTab('address');
