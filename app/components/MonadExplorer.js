@@ -521,15 +521,15 @@ export default function MonadExplorer() {
             </div>
             <div className="bg-gray-800 p-6 rounded-lg">
               <h3 className="text-lg font-semibold mb-2 text-purple-400">Risk Score</h3>
-              <p className="text-2xl font-bold">{addressDetails.riskScore.score}/100</p>
+              <p className="text-2xl font-bold">{addressDetails.riskScore && addressDetails.riskScore.score}/100</p>
               <p className={`text-sm ${
-                addressDetails.riskScore.level === 'Low' ? 'text-green-400' :
-                addressDetails.riskScore.level === 'Medium' ? 'text-yellow-400' : 'text-red-400'
-              }`}>{addressDetails.riskScore.level} Risk</p>
+                addressDetails.riskScore && addressDetails.riskScore.level === 'Low' ? 'text-green-400' :
+                addressDetails.riskScore && addressDetails.riskScore.level === 'Medium' ? 'text-yellow-400' : 'text-red-400'
+              }`}>{addressDetails.riskScore && addressDetails.riskScore.level} Risk</p>
             </div>
           </div>
 
-          {addressDetails.tokenBalances.length > 0 && (
+          {addressDetails.tokenBalances && addressDetails.tokenBalances.length > 0 && (
             <div className="bg-gray-800 p-6 rounded-lg mb-8">
               <h3 className="text-lg font-semibold mb-4 text-yellow-400">Token Holdings</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -565,7 +565,7 @@ export default function MonadExplorer() {
                   </tr>
                 </thead>
                 <tbody>
-                  {addressDetails.activityData.recentTransactions.slice(0, 10).map((tx, index) => (
+                  {addressDetails.activityData && addressDetails.activityData.recentTransactions && addressDetails.activityData.recentTransactions.slice(0, 10).map((tx, index) => (
                     <tr key={index} className="border-b border-gray-700 hover:bg-gray-700">
                       <td className="p-2 font-mono text-blue-400">{formatAddress(tx.hash)}</td>
                       <td className="p-2 capitalize">{tx.type.replace('_', ' ')}</td>
